@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import GridLoader from 'react-spinners/GridLoader'
 import {
   getStorage,
   ref,
@@ -9,11 +10,12 @@ import {
 } from 'firebase/storage'
 
 function App () {
-  const [file, setFile] = useState()
-  const [files, setFiles] = useState([])
-  const fileInputRef = useRef(null)
-  const [progress, setProgress] = useState()
-  const [name, setName] = useState()
+  const [file, setFile] = useState();
+  const [files, setFiles] = useState([]);
+  const fileInputRef = useRef(null);
+  const [progress, setProgress] = useState();
+  const [name, setName] = useState();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -24,7 +26,7 @@ function App () {
         for (const item of imageList.items) {
           const url = await getDownloadURL(item)
           if (item.name.includes('|')) {
-            const username = item.name.split('|')[0]          
+            const username = item.name.split('|')[0]
             urls.push({ url, username, ref: item })
           } else {
             urls.push({ url, ref: item })
@@ -32,12 +34,14 @@ function App () {
           await new Promise(resolve => setTimeout(resolve, 100))
         }
         setFiles(urls)
+        setLoading(false)
       } catch (error) {
         console.log(error)
+        setLoading(false)
       }
     }
     fetchImages()
-  }, [])
+  })
 
   const storage = getStorage()
   const metadata = { contentType: 'image/jpeg' }
@@ -101,7 +105,12 @@ function App () {
   return (
     <>
       <div className='bg-aqua p-6 container mx-auto h-screen'>
-        <h1 className='text-center text-3xl text-teal'>CIT Album<span className='text-sm'>1.0</span></h1>
+        <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'>
+        {loading && <GridLoader color='#fff' margin={2} size={30} />}
+        </div>
+        <h1 className='text-center text-3xl text-teal'>
+          CIT Album<span className='text-sm'>0.1</span>
+        </h1>
         <p className='text-center mt-6 mb-4'>
           {progress
             ? `Upload is ${progress}% done.`
@@ -125,8 +134,10 @@ function App () {
               className='text-sm'
             />
             <button
-              onClick={file && name ? handleUpload: null}
-              className={`bg-white px-2 py-1 text-sm rounded-sm ${!name || !file ? 'cursor-not-allowed':''}`}
+              onClick={file && name ? handleUpload : null}
+              className={`bg-white px-2 py-1 text-sm rounded-sm ${
+                !name || !file ? 'cursor-not-allowed' : ''
+              }`}
             >
               Upload
             </button>
@@ -150,7 +161,9 @@ function App () {
                   src={url.url}
                   className='max-w-40 h-full items-baseline group'
                 />
-                <p className='text-sm text-teal-900'>{url.username && url.username}</p>
+                <p className='text-sm text-teal-900'>
+                  {url.username && url.username}
+                </p>
               </div>
             ))}
         </div>
