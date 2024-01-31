@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
 // eslint-disable-next-line no-unused-vars
-import firebaseConfig from "./authentication/firebaseConfig.jsx";
+import firebaseConfig2 from "./authentication/firebaseConfig2.jsx";
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
