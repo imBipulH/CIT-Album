@@ -5,12 +5,13 @@ import {
   ref,
   uploadBytesResumable,
   getDownloadURL,
-  listAll
+  listAll,
+  deleteObject
 } from 'firebase/storage'
 
 function App () {
   const [file, setFile] = useState()
-  const [files, setFiles] = useState()
+  const [files, setFiles] = useState([])
   const fileInputRef = useRef(null)
   const [progress, setProgress] = useState()
   // console.log(file.name)
@@ -23,7 +24,7 @@ function App () {
         const urls = []
         for (const item of imageList.items) {
           const url = await getDownloadURL(item)
-          urls.push(url)
+          urls.push({url, ref: item})
           await new Promise(resolve => setTimeout(resolve, 100))
         }
         setFiles(urls)
@@ -61,16 +62,13 @@ function App () {
       error => {
         switch (error.code) {
           case 'storage/unauthorized':
-            // User doesn't have permission to access the object
+          console.log("User doesn't have permission to access the object") 
             break
           case 'storage/canceled':
-            // User canceled the upload
+            console.log("User canceled the upload") 
             break
-
-          // ...
-
           case 'storage/unknown':
-            // Unknown error occurred, inspect error.serverResponse
+           console.log("Unknown error occurred, inspect error.serverResponse")
             break
         }
       },
@@ -83,6 +81,16 @@ function App () {
     )
     fileInputRef.current.value = ''
     setFile(null)
+  }
+
+  const handleDelete = async (item) => {
+    console.log(item)
+    try {
+      await deleteObject(item.ref) // Delete the object from storage
+      setFiles(prevFiles => prevFiles.filter(file => file.url !== item.url)) // Remove the deleted item from state
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   return (
@@ -109,10 +117,17 @@ function App () {
         <div className='flex gap-2 flex-wrap'>
           {files &&
             files.map((url, index) => (
-              <div className='h-full w-40 border border-white p-1' key={index}>
-                <img src={url} className='max-w-40 h-full items-baseline' />
+              <div className='group h-full w-40 border relative border-white p-1' key={index}>
+                 <p onClick={()=> handleDelete(url)} className='absolute right-0 text-white text-sm bg-red-500 leading-3 px-2 py-1 rounded-sm cursor-pointer group-hover:block hidden'>x</p>
+                <img src={url.url} className='max-w-40 h-full items-baseline group' />
               </div>
             ))}
+        </div>
+        <div className='flex justify-center'>
+         
+          <p className='fixed bottom-4 text-xl text-center text-teal-900'>
+           This is a simple web app to upload your files to a web server from your smartdevice. This has been created for learning purpose. Thank you! 
+          </p>
         </div>
       </div>
     </>
